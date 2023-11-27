@@ -1,0 +1,30 @@
+
+<form id="myform" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Submit">
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>URL</th>
+            <th>Status HTTP du domaine d'origine</th>
+            <th>Status HTTP du domaine de destination</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for url in urls %}
+        <tr>
+            <td>{{ url.href }}</td>
+            <td>{{ url.old_domain_http_status }}</td>
+            <td>{{ url.new_domain_http_status }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css">
+{% load static %}
+<script src="{% static 'main.js' %}"></script>
