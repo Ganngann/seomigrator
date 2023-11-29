@@ -12,13 +12,22 @@ def migrator(request):
         form = MyForm(request.POST)
         if form.is_valid():
             old_domain = UrlManager.get_or_create_url(form.cleaned_data['old_domain'])
+            # new_domain = UrlManager.get_or_create_url(form.cleaned_data['new_domain'])
             old_domain.index()
             urls = Url.objects.filter(Domain_id=old_domain.Domain_id)
+            new_domain_urls = []
+            for url in urls :
+                new_uri = url.url.replace(form.cleaned_data['old_domain'], form.cleaned_data['new_domain'])
+                new_url = UrlManager.get_or_create_url(new_uri)
+                new_domain_urls.append(new_url)
+                new_url.add_to_queue()
+
             number_of_urls = urls.count()
+            joined_sets = dict(zip(urls, new_domain_urls))
     else:
         form = MyForm()
 
-    return render(request, 'migrator.html', {'form': form, 'urls': urls , 'number_of_urls': number_of_urls})
+    return render(request, 'migrator.html', {'form': form, 'urls': urls , 'number_of_urls': number_of_urls, 'new_domain_urls': new_domain_urls, 'joined_sets': joined_sets})
 
 def colector(request):
     # Récupérer les 60 premières URL de la table Queue

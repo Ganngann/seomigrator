@@ -1,122 +1,213 @@
 <!-- seomigratorpy/migrator/templates/migrator.html -->
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <!-- jQuery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    
-    <!-- DataTables -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
 
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css"/>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.7.1/css/buttons.dataTables.min.css"/>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/searchbuilder/1.6.0/css/searchBuilder.dataTables.min.css"/>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
 
-    <script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.7.1/js/dataTables.buttons.min.js"></script>
+    <!-- DataTables CSS and JS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css" />
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.colVis.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+
+    <!-- JSZip -->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.7.1/js/buttons.html5.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/searchbuilder/1.6.0/js/dataTables.searchBuilder.js"></script>
+
+    <!-- PDFMake -->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 
+    <!-- Search builder -->
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.datatables.net/searchbuilder/1.6.0/css/searchBuilder.dataTables.min.css" />
+    <script type="text/javascript"
+        src="https://cdn.datatables.net/searchbuilder/1.6.0/js/dataTables.searchBuilder.min.js"></script>
 
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+
+    <title>Seo Migrator</title>
+    <meta name="description" content="Seo Migrator tool to test your SEO migration from one domain to another.">
+
+    <style>
+        .old-url-set {
+            border-right: 2px solid #dee2e6;
+        }
+
+        .new-url-set {
+            border-left: 2px solid #dee2e6;
+        }
+
+        .dark-mode-switch {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 
-
 <body>
-    <div class="container-fluid">
-        <form id="myform" method="post" class="mt-3">
-            {% csrf_token %}
-            <div class="form-row">
-              <div class="col">
-                {{ form.old_domain }}
-              </div>
-              <div class="col">
-                {{ form.new_domain }}
-              </div>
-              <div class="col">
-                <button type="submit" class="btn btn-primary">Submit</button>
-              </div>
-            </div>
-          </form>
-    
-        <table id="url-table" class="table table-striped table-hover table-sm table-responsive">
-            <thead>
-                <tr>
-                    <th>{{ number_of_urls }} URLS</th>
-                    <th>Status HTTP du domaine d'origine</th>
-                    <th>last indexed</th>
-                    <th>Status HTTP du domaine de destination</th>
-                    <th>Time to first bite</th>
-                    <th>url id</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for url in urls %}
-                <tr>
-                    <td>{{ url.url }}</td>
-                    <td>{{ url.http_status }}</td>
-                    <td>{{ url.last_indexed }}</td>
-                    <td>{{ url.new_domain_http_status }}</td>
-                    <th>{{ url.time_to_first_bite }}</th>
-                    <th>{{ url.id }}</th>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Dark Mode Switch -->
+    <div class="form-check form-switch dark-mode-switch">
+        <input class="form-check-input" type="checkbox" id="darkModeSwitch">
+        <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
     </div>
-    
-    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css"> -->
+    <div class="container-fluid py-5">
+        <h1 class="text-center mb-4">Seo Migrator</h1>
+        <div class="mb-4">
+            <p class="lead">
+                This tool facilitates the testing of your SEO migration from one domain to another. It achieves this by
+                comparing URLs from the old domain with those from the new one.
+            </p>
+            <p class="lead">
+                Every discovered URL is added to the indexing queue. As this process can be time-consuming, feel free to
+                refresh the page periodically to monitor the progress.
+            </p>
+        </div>
 
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <!-- <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script> -->
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+        <form id="myform" method="post" class="mb-3">
+            {% csrf_token %}
+            <div class="row">
+                <div class="form-group col-md-4">
+                    {{ form.old_domain}}
+                </div>
+                <div class="form-group col-md-4">
+                    {{ form.new_domain}}
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">Submit</button>
+                </div>
+            </div>
+        </form>
+
+        <h2 class="my-4">{{ number_of_urls }} URLs indexed for the old domain</h2>
+
+        <div class="table-responsive">
+            <table id="url-table" class="table table-striped table-hover table-sm">
+                <thead>
+                    <tr>
+                        <th>Original Domain URLs</th>
+                        <th>HTTP Status of Original Domain</th>
+                        <th>Last Indexed</th>
+                        <th>Time to First Byte</th>
+                        <th class="old-url-set">URL ID</th>
+                        <th class="new-url-set">New Domain URLs</th>
+                        <th>HTTP Status of New Domain</th>
+                        <th>Last Indexed</th>
+                        <th>Time to First Byte</th>
+                        <th>URL ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for old_url, new_url in joined_sets.items %}
+                    <tr>
+                        <td>{{ old_url.url }}</td>
+                        <td>{{ old_url.http_status }}</td>
+                        <td>{{ old_url.last_indexed }}</td>
+                        <td>{{ old_url.time_to_first_bite }}</td>
+                        <td class="old-url-set">{{ old_url.id }}</td>
+                        <td class="new-url-set">{{ new_url.url }}</td>
+                        <td>{{ new_url.http_status }}</td>
+                        <td>{{ new_url.last_indexed }}</td>
+                        <td>{{ new_url.time_to_first_bite }}</td>
+                        <td>{{ new_url.id }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             $('#url-table').DataTable({
-                "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "All"] ],
-                dom: 'QBfrtlip',
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                dom: 'QBlfritip',
                 buttons: [
                     'pdfHtml5',
                     'copyHtml5',
                     'excelHtml5',
-                    'csvHtml5'
+                    'csv',
+                    'colvis'
                 ],
                 lengthMenu: [
                     [10, 25, 50, -1],
                     [10, 25, 50, "All"]
                 ],
-            });   
+            });
         });
     </script>
     <script>
         ajaxurl = "/migrator/cron";
         function fetchUrl() {
-        fetch(ajaxurl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Erreur réseau lors de la requête fetch');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Utilisez vos données ici
-                console.log(data);
-                fetchUrl();
-            })
-            .catch(error => {
-                console.error('Erreur lors de la récupération des données : ', error);
-            });
-        }   
-    
+            fetch(ajaxurl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur réseau lors de la requête fetch');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Utilisez vos données ici
+                    console.log(data);
+                    fetchUrl();
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la récupération des données : ', error);
+                });
+        }
+
         // Appeler la fonction
         fetchUrl();
         // setInterval(fetchUrl, 1000);
-    
+
+    </script>
+
+    <!-- Dark Mode Switch -->
+    <script>
+        // Get switch element
+        var darkModeSwitch = document.getElementById('darkModeSwitch');
+
+        // Check for saved 'darkMode' in localStorage
+        var darkMode = localStorage.getItem('darkMode');
+
+        if (darkMode === 'enabled') {
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+            darkModeSwitch.checked = true;
+        }
+
+        // Listen for a click on the switch
+        darkModeSwitch.addEventListener('click', function () {
+            // If the switch is checked, enable dark mode
+            if (darkModeSwitch.checked) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                // Else, disable dark mode
+                document.documentElement.removeAttribute('data-bs-theme');
+                localStorage.setItem('darkMode', null);
+            }
+        });
     </script>
 
 </body>
+
+</html>
