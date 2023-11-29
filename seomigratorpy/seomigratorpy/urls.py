@@ -25,6 +25,7 @@ urlpatterns = [
     path('hello/', include('hello.urls')),
     path('admin/', admin.site.urls),
     path('', include('migrator.urls')),
+    path('migrator/', include('migrator.urls')),
 ]
 
 if settings.DEBUG:
