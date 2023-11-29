@@ -41,8 +41,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'hello',
     'migrator',
-    'channels',
-    'django_crontab',
 ]
 
 MIDDLEWARE = [
@@ -157,7 +155,3 @@ LOGGING = {
 if DEBUG:
     STATIC_URL = '/static/'
     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
-CRONJOBS = [
-    ('* * * * *', 'migrator.cron.url_colector')  # s'exécute toutes les minutes
-]
