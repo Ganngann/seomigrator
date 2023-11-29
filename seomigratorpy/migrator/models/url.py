@@ -1,12 +1,12 @@
+# seomigratorpy/migrator/models/url.py
+
 from django.db import models
 from urllib.parse import urlparse
 from .managers.domain_manager import DomainManager
 from .managers.subdomain_manager import SubdomainManager
-# from .managers.url_manager import UrlManager
 from .queue import Queue
 import requests
 from bs4 import BeautifulSoup
-from pprint import pprint
 from datetime import datetime
 
 
@@ -25,13 +25,95 @@ class Url(models.Model):
     last_indexed = models.DateTimeField(null=True)
     time_to_first_bite = models.FloatField(null=True)
 
+    EXCLUDED_PREFIXES = (
+        'tel', 
+        'mailto', 
+        'javascript', 
+        '#',
+        'ftp',
+    )
+    EXCLUDED_SUFFIXES = (
+        # Images
+        '.jpg', 
+        '.jpeg', 
+        '.bmp', 
+        '.webp',
+        '.png', 
+        '.gif', 
+        '.svg',
+        '.ico',
+
+        # Audio and Video
+        '.mp3',
+        '.wav',
+        '.mp4',
+        '.avi',
+        '.mov',
+        '.mpeg',
+
+        # Documents
+        '.pdf', 
+        '.doc', 
+        '.docx', 
+        '.ppt', 
+        '.pptx', 
+        '.txt', 
+        '.xlsx', 
+        '.xls', 
+        '.csv', 
+        '.rtf',
+        '.odt',
+        '.ods',
+
+        # Archives
+        '.zip', 
+        '.gz', 
+        '.tar', 
+        '.rar', 
+        '.iso',
+        '.7z',
+
+        # Programming
+        '.js', 
+        '.json',
+        '.xml',
+        '.css',
+        '.py',
+        '.php',
+        '.java',
+        '.c',
+        '.cpp',
+        '.h',
+        '.sh',
+        '.swift',
+        '.go',
+        '.rb',
+
+        # Databases
+        '.sql',
+        '.db',
+        '.dbf',
+        '.mdb',
+
+        # Other
+        '.log',
+        '.bin',
+        '.dat',
+        '.bak',
+        '.tmp',
+    )
+
     def __init__(self, *args, **kwargs):
         super(Url, self).__init__(*args, **kwargs)
-        self.protocol = self.set_protocol()
-        self.set_subdomain()
-        self.set_domain()
-        self.set_path()
-        self.construct_url()
+
+    def save(self, *args, **kwargs):
+        if self.url.startswith('http'):
+            self.protocol = self.set_protocol()
+            self.set_subdomain()
+            self.set_domain()
+            self.set_path()
+            self.construct_url()
+            super(Url, self).save(*args, **kwargs)
 
     def construct_url(self):
         self.url = self.protocol + '://'
@@ -46,11 +128,6 @@ class Url(models.Model):
         ext = urlparse(self.url)
         if hasattr(ext, 'path'):
             self.path = ext.path
-
-    def save(self, *args, **kwargs):
-        if self.url.startswith('http'):
-            super(Url, self).save(*args, **kwargs)
-
 
     def set_protocol(self):
         ext = urlparse(self.url)
@@ -71,30 +148,29 @@ class Url(models.Model):
     
     def index(self):
         from .managers.url_manager import UrlManager
-        response = requests.get(self.url, headers={'User-Agent': 'Mozilla/5.0'})
+        try:
+            response = requests.get(self.url, headers={'User-Agent': 'Mozilla/5.0'})
+        except requests.exceptions.RequestException as e:
+            print(f"Erreur lors de la requête GET pour l'URL {self.url}: {e}")
+            return
+
         soup = BeautifulSoup(response.text, 'html.parser')
+
         for a in soup.find_all('a', href=True):
-            # if the string a staert with "tel" or "mailto"
-            prefixes = ('tel', 'mailto', 'javascript', '#')
-            if any(a['href'].startswith(prefix) for prefix in prefixes):
+            if any(a['href'].startswith(prefix) for prefix in self.EXCLUDED_PREFIXES):
                 continue
-            suffixes = ('.jpg', '.png', '.gif', '.css', '.js', '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.txt', '.xlsx', '.xls', '.csv')
-            if any(a['href'].endswith(suffix) for suffix in suffixes):
+            if any(a['href'].endswith(suffix) for suffix in self.EXCLUDED_SUFFIXES):
                 continue
 
             try:
                 url = UrlManager.get_or_create_url(a['href'], self.Domain_id.name)
-                # print("last indexed: " + str(url.last_indexed))
-                if not url.last_indexed :
-                    if url.Domain_id.name == self.Domain_id.name:
-                        url.add_to_queue()
+                if not url.last_indexed and url.Domain_id.name == self.Domain_id.name:
+                    url.add_to_queue()
             except Url.DoesNotExist:
                 pass
-        print("URL INDEXED: " + self.url)
+        
         self.http_status = response.status_code
-        print("HTTP STATUS: " + str(self.http_status))
         self.last_indexed = datetime.now()
         self.time_to_first_bite = response.elapsed.total_seconds()
-        print("TIME TO FIRST BITE: " + str(self.time_to_first_bite))
         self.save()
 

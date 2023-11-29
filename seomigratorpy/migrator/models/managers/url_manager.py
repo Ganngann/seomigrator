@@ -1,22 +1,24 @@
+# seomigratorpy/migrator/models/managers/url_manager.py
+
 from django.db import models
 from migrator.models.url import Url
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import tldextract
-
 
 class UrlManager(models.Manager):
 
     @staticmethod
     def get_or_create_url(url, domain=''):
         """Get or create a URL."""
-        full_url = UrlManager.set_url_url(url, domain)
-        # print("############## GET OR CREATE URL: ")
-        # print(full_url)
-        full_url, created = Url.objects.get_or_create(url=full_url)
-        if created:
-            # print("c'est une nouvelle url")
-            full_url.save()
-        return full_url
+        try:
+            full_url = UrlManager.set_url_url(url, domain)
+            full_url, created = Url.objects.get_or_create(url=full_url)
+            if created:
+                full_url.save()
+            return full_url
+        except Exception as e:
+            print(f"Erreur lors de la création de l'URL {url} : {e}")
+            return None
 
     @staticmethod
     def extract_protocol(url):
@@ -56,6 +58,4 @@ class UrlManager(models.Manager):
         if path == domain:
             path = ''
         full_url += path
-        # print("path : " + path)
-        # print("domain : " + domain)
         return full_url
