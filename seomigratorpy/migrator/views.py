@@ -11,7 +11,7 @@ from migrator.models.managers.url_manager import UrlManager
 
 def migrator(request):
     # colector()
-
+    number_of_urls = 0
     urls = []
     if request.method == 'POST':
         form = MyForm(request.POST)
