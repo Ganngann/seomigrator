@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-9rr3=90f*g)9pv=y2byi-&nz-$y=&6f$zgc+fzqs+k-lhif8v1
 DEBUG = True
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['seomigrator.o2.gann.be']
 
 
 # Application definition
