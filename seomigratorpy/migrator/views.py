@@ -8,6 +8,9 @@ from migrator.models.managers.url_manager import UrlManager
 def migrator(request):
     number_of_urls = 0
     urls = []
+    new_domain_urls = []
+    joined_sets = {}
+    
     if request.method == 'POST':
         form = MyForm(request.POST)
         if form.is_valid():
@@ -15,7 +18,6 @@ def migrator(request):
             # new_domain = UrlManager.get_or_create_url(form.cleaned_data['new_domain'])
             old_domain.index()
             urls = Url.objects.filter(Domain_id=old_domain.Domain_id)
-            new_domain_urls = []
             for url in urls :
                 new_uri = url.url.replace(form.cleaned_data['old_domain'], form.cleaned_data['new_domain'])
                 new_url = UrlManager.get_or_create_url(new_uri)
