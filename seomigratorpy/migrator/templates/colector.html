@@ -1,6 +1,20 @@
-
+{
+    "status": "ok",
+    "urls": [
+        {% for url in indexed_urls %}
         {
-            "status": "ok",
-            "data": {
-            }
-        }
+            "id": {{ url.url.id }},
+            "url": "{{ url.url.url }}",
+            "subdomain": "{{ url.url.subdomain }}",
+            "domain": "{{ url.url.domain }}",
+            "path": "{{ url.url.path }}",
+            "page_id": {{ url.url.Page_id|default:"null" }},
+            "http_status": {{ url.url.http_status|default:"null" }},
+            "protocol": "{{ url.url.protocol }}",
+            "first_seen": "{{ url.url.first_seen|date:"c"|default:"null" }}",
+            "last_indexed": "{{ url.url.last_indexed|date:"c"|default:"null" }}",
+            "time_to_first_bite": {{ url.url.time_to_first_bite|default:"null" }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}     
+    ]
+}

@@ -1,13 +1,16 @@
 # seomigratorpy/migrator/models/url.py
 
-from django.db import models
+from django.db import models, transaction
 from urllib.parse import urlparse
 from .managers.domain_manager import DomainManager
 from .managers.subdomain_manager import SubdomainManager
 from .queue import Queue
-import requests
+from requests import Session
 from bs4 import BeautifulSoup
 from datetime import datetime
+import re
+import requests
+from xml.etree import ElementTree as ET
 
 
 
@@ -76,7 +79,6 @@ class Url(models.Model):
         # Programming
         '.js', 
         '.json',
-        '.xml',
         '.css',
         '.py',
         '.php',
@@ -148,30 +150,51 @@ class Url(models.Model):
     
     def index(self):
         from .managers.url_manager import UrlManager
+
+        session = Session()
+        session.headers = {'User-Agent': 'Mozilla/5.0'}
+
         try:
-            response = requests.get(self.url, headers={'User-Agent': 'Mozilla/5.0'})
+            response = session.get(self.url)
         except requests.exceptions.RequestException as e:
-            print(f"Erreur lors de la requête GET pour l'URL {self.url}: {e}")
+            # print(f"Erreur lors de la requête GET pour l'URL {self.url}: {e}")
             return
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        # Compile regex pattern outside of the loop
+        excluded_prefixes = re.compile('|'.join(map(re.escape, self.EXCLUDED_PREFIXES)))
+        excluded_suffixes = re.compile('|'.join(map(re.escape, self.EXCLUDED_SUFFIXES)))
 
-        for a in soup.find_all('a', href=True):
-            if any(a['href'].startswith(prefix) for prefix in self.EXCLUDED_PREFIXES):
-                continue
-            if any(a['href'].endswith(suffix) for suffix in self.EXCLUDED_SUFFIXES):
-                continue
+        # Check if the response is XML
+        if 'xml' in response.headers['Content-Type']:
+            root = ET.fromstring(response.content)
+            urls = [elem.text for elem in root.iter() if 'loc' in elem.tag]
 
-            try:
-                url, created = UrlManager.get_or_create_url(a['href'], self.domain.name)
-                if url is not None:
-                    if not url.last_indexed and url.domain.name == self.domain.name:
-                        url.add_to_queue()
-            except Url.DoesNotExist:
-                pass
-        
-        self.http_status = response.status_code
-        self.last_indexed = datetime.now()
-        self.time_to_first_bite = response.elapsed.total_seconds()
-        self.save()
+        else:  # Assume it's HTML
+            soup = BeautifulSoup(response.text, 'html.parser')
+            urls = [a['href'] for a in soup.find_all('a', href=True)]
+
+        print('################### index ###################')
+        print(urls)
+
+        with transaction.atomic():
+            for href in urls:
+                print(href)
+                if excluded_prefixes.match(href) or excluded_suffixes.search(href):
+                    print("################ EXCLUDED ################")
+                    continue
+                    continue
+
+                try:
+                    url, created = UrlManager.get_or_create_url(href, self.domain.name)
+                    if url is not None:
+                        if not url.last_indexed and url.domain.name == self.domain.name:
+                            url.add_to_queue()
+                except Url.DoesNotExist:
+                    pass
+
+            self.http_status = response.status_code
+            self.last_indexed = datetime.now()
+            self.time_to_first_bite = response.elapsed.total_seconds()
+            self.save()
+            return self.http_status
 

@@ -1,5 +1,6 @@
 # seomigratorpy/migrator/views.py
 
+import pprint
 from django.shortcuts import render
 from .forms import MyForm
 from migrator.models import Domain, Url, Queue
@@ -20,7 +21,14 @@ def migrator(request):
     if request.method == "GET" and form.is_valid():
         new_url_to_index = form.cleaned_data["new_url_to_index"]
         old_domain, created = UrlManager.get_or_create_url(form.cleaned_data["old_domain"])
-        old_domain.index()
+        old_domain_sitemap, created = UrlManager.get_or_create_url(old_domain.url + '/sitemap.xml')
+        sitemap = old_domain_sitemap.index()
+        print("##################### Sitemap #####################")
+        print(sitemap)
+        
+        if not sitemap == 200:
+            old_domain.index()
+        
         urls = list(Url.objects.filter(domain=old_domain.domain))  # Convertir en liste pour éviter les requêtes multiples
         for url in urls:
             new_uri = url.url.replace(form.cleaned_data["old_domain"], form.cleaned_data["new_domain"])
@@ -72,6 +80,11 @@ def colector(request):
     for queue_url in queue_urls:
         queue_url.delete()
         queue_url.url.index()
-
-    return render(request, 'colector.html')
+        print("############ ADD TO QUEUE: ")
+        pprint.pprint(queue_url.url.url)
+    pprint.pprint(vars(queue_urls))
+    
+    return render(request, 'colector.html', {
+        "indexed_urls": queue_urls
+    })
 

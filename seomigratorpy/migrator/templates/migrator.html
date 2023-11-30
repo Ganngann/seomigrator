@@ -53,14 +53,24 @@
         right: 10px;
         cursor: pointer;
       }
+      .boost-query-switch {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        cursor: pointer;
+      }
     </style>
   </head>
 
   <body>
     <!-- Dark Mode Switch -->
     <div class="form-check form-switch dark-mode-switch">
-      <input class="form-check-input" type="checkbox" id="darkModeSwitch" />
       <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
+      <input class="form-check-input" type="checkbox" id="darkModeSwitch" />
+    </div>
+    <div class="form-check form-switch boost-query-switch">
+      <input class="form-check-input" type="checkbox" id="boostQuerySwitch" />
+      <label class="form-check-label" for="boostQuerySwitch">Boost Query</label>
     </div>
     <div class="progress" style="height: 5px;">
         <div class="progress-bar" role="progressbar" aria-valuenow="{{ number_of_new_urls }}" aria-valuemin="0" aria-valuemax="{{ number_of_urls }}" style="width: {{ progress }}%"></div>
@@ -156,11 +166,13 @@
       })
     </script>
     <script>
-      ajaxurl = '/migrator/cron?url_to_index=1'
-      function fetchUrl() {
+      ajaxurl = '/migrator/cron?url_to_index=2'
+      function fetchUrl() {        
         fetch(ajaxurl)
           .then((response) => {
             if (!response.ok) {
+              // uncheck the switch
+              $('#boostQuerySwitch').prop('checked', false)
               throw new Error('Erreur réseau lors de la requête fetch')
             }
             return response.json()
@@ -168,15 +180,26 @@
           .then((data) => {
             // Utilisez vos données ici
             console.log(data)
-            fetchUrl()
+            if ($('#boostQuerySwitch')[0].checked) {
+              delayer()
+            }
           })
           .catch((error) => {
             console.error('Erreur lors de la récupération des données : ', error)
           })
       }
       
-      // Appeler la fonction
-      fetchUrl()
+      $('#boostQuerySwitch').change(function () {
+        if ($(this).is(':checked')) {
+          delayer()
+        }
+      })
+      
+      function delayer() {
+        setTimeout(fetchUrl, 1000)
+      }
+
+      
       // setInterval(fetchUrl, 1000);
     </script>
 
