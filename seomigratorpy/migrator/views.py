@@ -37,6 +37,8 @@ def migrator(request):
         number_of_new_urls = len(new_domain_urls)
         # joined_sets = dict(zip(urls[:number_of_urls], new_domain_urls))
         joined_sets = dict(zip_longest(urls, new_domain_urls))
+    
+    progress = (number_of_new_urls / number_of_urls) * 100
 
 
     return render(
@@ -48,13 +50,14 @@ def migrator(request):
             "number_of_urls": number_of_urls,
             "number_of_new_urls": number_of_new_urls,
             "joined_sets": joined_sets,
+            "progress": progress
         },
     )
 
 
 def colector(request):
     # Récupérer les 60 premières URL de la table Queue
-    queue_urls = Queue.objects.all()[:60]
+    queue_urls = Queue.objects.all()[:10]
     if not queue_urls:
         return 'stop'
 
