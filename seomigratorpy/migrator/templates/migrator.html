@@ -85,30 +85,40 @@
         <form id="myform" method="post" class="mb-3">
             {% csrf_token %}
             <div class="row">
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
+                    {{ form.old_domain.label_tag }}
                     {{ form.old_domain}}
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
+                    {{ form.new_domain.label_tag }}
                     {{ form.new_domain}}
                 </div>
-                <div class="col-md-4">
+                <div class="form-group col-md-3">
+                    {{ form.new_url_to_index.label_tag }}
+                    <span id="range_value"></span>
+                    {{ form.new_url_to_index}}
+                    <script>
+                        function updateValue(val) {
+                            document.getElementById('range_value').innerText = val;
+                        }
+                    </script>
+                </div>
+                <div class="col-md-3">
                     <button type="submit" class="btn btn-primary w-100">Submit</button>
                 </div>
             </div>
         </form>
-
-        <h2 class="my-4">{{ number_of_urls }} URLs indexed for the old domain</h2>
-
+        
         <div class="table-responsive">
             <table id="url-table" class="table table-striped table-hover table-sm">
                 <thead>
                     <tr>
-                        <th>Original Domain URLs</th>
+                        <th>Original Domain URLs <span class="badge bg-success">{{ number_of_urls }}</span></th>
                         <th>HTTP Status of Original Domain</th>
                         <th>Last Indexed</th>
                         <th>Time to First Byte</th>
                         <th class="old-url-set">URL ID</th>
-                        <th class="new-url-set">New Domain URLs</th>
+                        <th class="new-url-set">New Domain URLs <span class="badge bg-success">{{ number_of_new_urls }}</span></th>
                         <th>HTTP Status of New Domain</th>
                         <th>Last Indexed</th>
                         <th>Time to First Byte</th>

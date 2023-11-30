@@ -15,10 +15,10 @@ class UrlManager(models.Manager):
             full_url, created = Url.objects.get_or_create(url=full_url)
             if created:
                 full_url.save()
-            return full_url
+            return full_url, created
         except Exception as e:
             print(f"Erreur lors de la création de l'URL {url} : {e}")
-            return None
+            return None, False
 
     @staticmethod
     def extract_protocol(url):
