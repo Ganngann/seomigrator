@@ -11,7 +11,9 @@ def migrator(request):
     urls = []
     new_domain_urls = []
     joined_sets = {}
-    created_count = 0  # Compteur pour le nombre de fois que "created" est "True"
+    created_count = 0
+    number_of_new_urls = 0
+    number_of_urls = 0
     form = MyForm(request.POST if request.method == "POST" else None)
 
     if request.method == "POST" and form.is_valid():
