@@ -14,6 +14,7 @@ def migrator(request):
     created_count = 0
     number_of_new_urls = 0
     number_of_urls = 0
+    progress = 0
     form = MyForm(request.POST if request.method == "POST" else None)
 
     if request.method == "POST" and form.is_valid():
@@ -38,7 +39,9 @@ def migrator(request):
         # joined_sets = dict(zip(urls[:number_of_urls], new_domain_urls))
         joined_sets = dict(zip_longest(urls, new_domain_urls))
     
-    progress = (number_of_new_urls / number_of_urls) * 100
+    if number_of_urls > 0 and number_of_new_urls > 0:
+        progress = (number_of_new_urls / number_of_urls) * 100
+        
 
 
     return render(
@@ -57,13 +60,14 @@ def migrator(request):
 
 def colector(request):
     # Récupérer les 60 premières URL de la table Queue
-    queue_urls = Queue.objects.all()[:10]
+    queue_urls = Queue.objects.all()[:60]
     if not queue_urls:
         return 'stop'
 
     # Extraire les URL
     for queue_url in queue_urls:
-        queue_url.url_id.index()
         queue_url.delete()
+        queue_url.url_id.index()
+
 
     return render(request, 'colector.html')
