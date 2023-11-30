@@ -15,9 +15,9 @@ def migrator(request):
     number_of_new_urls = 0
     number_of_urls = 0
     progress = 0
-    form = MyForm(request.POST if request.method == "POST" else None)
+    form = MyForm(request.GET if request.method == "GET" else None)
 
-    if request.method == "POST" and form.is_valid():
+    if request.method == "GET" and form.is_valid():
         new_url_to_index = form.cleaned_data["new_url_to_index"]
         old_domain, created = UrlManager.get_or_create_url(form.cleaned_data["old_domain"])
         old_domain.index()

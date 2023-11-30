@@ -72,8 +72,7 @@
         <p class="lead">Every discovered URL is added to the indexing queue. As this process can be time-consuming, feel free to refresh the page periodically to monitor the progress.</p>
       </div>
 
-      <form id="myform" method="post" class="mb-3">
-        {% csrf_token %}
+      <form id="myform" method="get" class="mb-3">
         <div class="row">
           <div class="form-group col-md-3">{{ form.old_domain.label_tag }}
             {{ form.old_domain }}</div>
@@ -93,6 +92,7 @@
             <button type="submit" class="btn btn-primary w-100">Submit</button>
           </div>
         </div>
+        {% csrf_token %}
       </form>
 
       <div class="table-responsive">
