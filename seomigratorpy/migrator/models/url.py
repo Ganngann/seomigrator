@@ -164,8 +164,9 @@ class Url(models.Model):
 
             try:
                 url, created = UrlManager.get_or_create_url(a['href'], self.Domain_id.name)
-                if not url.last_indexed and url.Domain_id.name == self.Domain_id.name:
-                    url.add_to_queue()
+                if url is not None:
+                    if not url.last_indexed and url.Domain_id.name == self.Domain_id.name:
+                        url.add_to_queue()
             except Url.DoesNotExist:
                 pass
         
