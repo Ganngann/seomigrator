@@ -13,8 +13,6 @@ class UrlManager(models.Manager):
         try:
             full_url = UrlManager.set_url_url(url, domain)
             full_url, created = Url.objects.get_or_create(url=full_url)
-            if created:
-                full_url.save()
             return full_url, created
         except Exception as e:
             print(f"Erreur lors de la création de l'URL {url} : {e}")

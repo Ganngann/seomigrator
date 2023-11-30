@@ -21,7 +21,7 @@ def migrator(request):
         new_url_to_index = form.cleaned_data["new_url_to_index"]
         old_domain, created = UrlManager.get_or_create_url(form.cleaned_data["old_domain"])
         old_domain.index()
-        urls = Url.objects.filter(domain=old_domain.domain)
+        urls = list(Url.objects.filter(domain=old_domain.domain))  # Convertir en liste pour éviter les requêtes multiples
         for url in urls:
             new_uri = url.url.replace(form.cleaned_data["old_domain"], form.cleaned_data["new_domain"])
             new_url, created = UrlManager.get_or_create_url(new_uri)
@@ -34,16 +34,12 @@ def migrator(request):
                 if created_count > new_url_to_index:  # Si le compteur dépasse 50
                     break  # Sortir de la boucle
 
-
         number_of_urls = len(urls)
         number_of_new_urls = len(new_domain_urls)
-        # joined_sets = dict(zip(urls[:number_of_urls], new_domain_urls))
         joined_sets = dict(zip_longest(urls, new_domain_urls))
     
     if number_of_urls > 0 and number_of_new_urls > 0:
         progress = (number_of_new_urls / number_of_urls) * 100
-        
-
 
     return render(
         request,
@@ -57,6 +53,8 @@ def migrator(request):
             "progress": progress
         },
     )
+
+
 
 
 def colector(request):
