@@ -27,7 +27,8 @@ def migrator(request):
             new_url, created = UrlManager.get_or_create_url(new_uri)
             new_domain_urls.append(new_url)
             if new_url is not None:
-                new_url.add_to_queue()
+                if new_url.last_indexed is None:
+                    new_url.add_to_queue()  
             if created:  # Si "created" est "True"
                 created_count += 1  # Incrémenter le compteur
                 if created_count > new_url_to_index:  # Si le compteur dépasse 50
