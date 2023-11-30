@@ -59,8 +59,13 @@ def migrator(request):
 
 
 def colector(request):
-    # Récupérer les 60 premières URL de la table Queue
-    queue_urls = Queue.objects.all()[:60]
+    url_to_index = request.GET.get('url_to_index')
+    if url_to_index is not None:
+        url_to_index = int(url_to_index)  # Convertir url_to_index en entier
+    else:
+        url_to_index = 5  # valeur par défaut si url_to_index n'est pas spécifié
+    # Récupérer les url_to_index premières URL de la table Queue
+    queue_urls = Queue.objects.all()[:url_to_index]
     if not queue_urls:
         return 'stop'
 
@@ -69,5 +74,5 @@ def colector(request):
         queue_url.delete()
         queue_url.url_id.index()
 
-
     return render(request, 'colector.html')
+
