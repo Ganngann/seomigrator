@@ -15,8 +15,8 @@ from datetime import datetime
 class Url(models.Model):
     url = models.URLField(unique=True)
     id = models.AutoField(primary_key=True)
-    Subdomain_id = models.ForeignKey('Subdomain', on_delete=models.CASCADE, null=True)
-    Domain_id = models.ForeignKey('Domain', on_delete=models.CASCADE)
+    subdomain = models.ForeignKey('Subdomain', on_delete=models.CASCADE, null=True)
+    domain = models.ForeignKey('Domain', on_delete=models.CASCADE)
     path = models.CharField(max_length=255, null=True)
     Page_id = models.ForeignKey('Page', on_delete=models.CASCADE, null=True)
     http_status = models.IntegerField(null=True)
@@ -117,10 +117,10 @@ class Url(models.Model):
 
     def construct_url(self):
         self.url = self.protocol + '://'
-        if self.Subdomain_id:
-            self.url += self.Subdomain_id.name + '.'
-        if self.Domain_id:
-            self.url += self.Domain_id.name
+        if self.subdomain:
+            self.url += self.subdomain.name + '.'
+        if self.domain:
+            self.url += self.domain.name
         if self.path:
             self.url += self.path
 
@@ -136,15 +136,15 @@ class Url(models.Model):
         return ext.scheme
 
     def set_domain(self):
-        self.Domain_id = DomainManager().get_or_create_domain(self.url)
+        self.domain = DomainManager().get_or_create_domain(self.url)
 
     def set_subdomain(self):
-        self.Subdomain_id = SubdomainManager().get_or_create_subdomain(self.url)
+        self.subdomain = SubdomainManager().get_or_create_subdomain(self.url)
     
     def add_to_queue(self):
         # print("############ ADD TO QUEUE: ")
         # pprint(vars(self))
-        Queue.objects.get_or_create(url_id = self)
+        Queue.objects.get_or_create(url = self)
     
     def index(self):
         from .managers.url_manager import UrlManager
@@ -163,9 +163,9 @@ class Url(models.Model):
                 continue
 
             try:
-                url, created = UrlManager.get_or_create_url(a['href'], self.Domain_id.name)
+                url, created = UrlManager.get_or_create_url(a['href'], self.domain.name)
                 if url is not None:
-                    if not url.last_indexed and url.Domain_id.name == self.Domain_id.name:
+                    if not url.last_indexed and url.domain.name == self.domain.name:
                         url.add_to_queue()
             except Url.DoesNotExist:
                 pass

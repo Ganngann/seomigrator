@@ -21,7 +21,7 @@ def migrator(request):
         new_url_to_index = form.cleaned_data["new_url_to_index"]
         old_domain, created = UrlManager.get_or_create_url(form.cleaned_data["old_domain"])
         old_domain.index()
-        urls = Url.objects.filter(Domain_id=old_domain.Domain_id)
+        urls = Url.objects.filter(domain=old_domain.domain)
         for url in urls:
             new_uri = url.url.replace(form.cleaned_data["old_domain"], form.cleaned_data["new_domain"])
             new_url, created = UrlManager.get_or_create_url(new_uri)
@@ -73,7 +73,7 @@ def colector(request):
     # Extraire les URL
     for queue_url in queue_urls:
         queue_url.delete()
-        queue_url.url_id.index()
+        queue_url.url.index()
 
     return render(request, 'colector.html')
 

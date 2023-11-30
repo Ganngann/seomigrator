@@ -8,6 +8,6 @@ def url_colector():
     queue_urls = Queue.objects.all()[:60]
 
     # Extraire les URL
-    urls = [queue_url.url_id.url for queue_url in queue_urls]
+    urls = [queue_url.url.url for queue_url in queue_urls]
 
     pass
