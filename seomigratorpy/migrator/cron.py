@@ -2,7 +2,6 @@ from .models import Queue
 
 
 def url_colector():
-    print("############################################################################# url_colector")
 
     # Récupérer les 60 premières URL de la table Queue
     queue_urls = Queue.objects.all()[:60]

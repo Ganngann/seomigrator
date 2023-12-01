@@ -1,3 +1,4 @@
+# seomigratorpy/migrator/models/page.py
 from django.db import models
 
 class Page(models.Model):

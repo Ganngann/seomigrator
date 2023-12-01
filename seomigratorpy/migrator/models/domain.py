@@ -1,3 +1,4 @@
+# seomigratorpy/migrator/models/domain.py
 from django.db import models
 
 class Domain(models.Model):

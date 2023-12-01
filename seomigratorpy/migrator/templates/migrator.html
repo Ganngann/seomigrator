@@ -47,13 +47,13 @@
         border-left: 2px solid #dee2e6;
       }
       
-      .dark-mode-switch {
+      .dark-mode-switcha {
         position: fixed;
         top: 10px;
         right: 10px;
         cursor: pointer;
       }
-      .boost-query-switch {
+      .boost-query-switcha {
         position: fixed;
         top: 10px;
         left: 10px;
@@ -64,17 +64,31 @@
 
   <body>
     <!-- Dark Mode Switch -->
-    <div class="form-check form-switch dark-mode-switch">
-      <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
-      <input class="form-check-input" type="checkbox" id="darkModeSwitch" />
-    </div>
-    <div class="form-check form-switch boost-query-switch">
-      <input class="form-check-input" type="checkbox" id="boostQuerySwitch" />
-      <label class="form-check-label" for="boostQuerySwitch">Boost Query</label>
-    </div>
-    <div class="progress" style="height: 5px;">
-        <div class="progress-bar" role="progressbar" aria-valuenow="{{ number_of_new_urls }}" aria-valuemin="0" aria-valuemax="{{ number_of_urls }}" style="width: {{ progress }}%"></div>
+    <nav class="navbar navbar-light bg-light">
+      <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1">Seo Migrator</span>
+
+        <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+          <input type="radio" class="btn-check" name="btnradio" id="scanOld" autocomplete="off" />
+          <label class="btn btn-outline-primary" for="scanOld"><span class="badge rounded-pill bg-pimary scansecondold visually-hidden">1.2/sec</span> Scan old domain <span class=" spinner-border-sm scanold" role="status" aria-hidden="true"></span></label>
+
+          <input type="radio" class="btn-check" name="btnradio" id="stopScan" autocomplete="off" checked />
+          <label class="btn btn-outline-primary" for="stopScan">Stop Scan</label>
+
+          <input type="radio" class="btn-check" name="btnradio" id="scanNew" autocomplete="off" />
+          <label class="btn btn-outline-primary" for="scanNew"><span class="badge rounded-pill bg-pimary scansecondnew visually-hidden">1.2/sec</span> Scan new domain <span class=" spinner-border-sm scannew" role="status" aria-hidden="true"></span></label>
+        </div>
+
+        <div class="form-check form-switch dark-mode-switch">
+          <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
+          <input class="form-check-input" type="checkbox" id="darkModeSwitch" />
+        </div>
       </div>
+    </nav>
+
+    <div class="progress" style="height: 5px;">
+      <div class="progress-bar" role="progressbar" aria-valuenow="{{ number_of_new_urls }}" aria-valuemin="0" aria-valuemax="{{ number_of_urls }}" style="width: {{ progress }}%"></div>
+    </div>
     <div class="container-fluid py-5">
       <h1 class="text-center mb-4">Seo Migrator</h1>
       <div class="mb-4">
@@ -84,13 +98,26 @@
 
       <form id="myform" method="get" class="mb-3">
         <div class="row">
-          <div class="form-group col-md-3">{{ form.old_domain.label_tag }}
-            {{ form.old_domain }}</div>
-          <div class="form-group col-md-3">{{ form.new_domain.label_tag }}
-            {{ form.new_domain }}</div>
+          <div class="form-group col-md-3">
+            {{ form.old_domain.label_tag }}
+            {% if form.old_domain.errors %}
+              <div class="alert alert-danger" role="alert">{{ form.old_domain.errors }}</div>
+            {% endif %}
+            {{ form.old_domain }}
+          </div>
+          <div class="form-group col-md-3">
+            {{ form.new_domain.label_tag }}
+            {% if form.new_domain.errors %}
+              <div class="alert alert-danger" role="alert">{{ form.new_domain.errors }}</div>
+            {% endif %}
+            {{ form.new_domain }}
+          </div>
           <div class="form-group col-md-3">
             {{ form.new_url_to_index.label_tag }}
             <span id="range_value"></span>
+            {% if form.new_url_to_index.errors %}
+              <div class="alert alert-danger" role="alert">{{ form.new_url_to_index.errors }}</div>
+            {% endif %}
             {{ form.new_url_to_index }}
             <script>
               function updateValue(val) {
@@ -112,9 +139,15 @@
               <th>
                 Original Domain URLs <span class="badge bg-success">{{ number_of_urls }}</span>
               </th>
-              <th>HTTP Status of Original Domain</th>
+              <th>
+                HTTP Status{% if number_of_urls_with_status == number_of_urls %}
+                  <span class="badge bg-success">{{ number_of_urls_with_status }}</span>
+                {% else %}
+                  <span class="badge bg-danger">{{ number_of_urls_with_status }}</span>
+                {% endif %}
+              </th>
               <th>Last Indexed</th>
-              <th>Time to First Byte</th>
+              <th>TTFB</th>
               <th class="old-url-set">URL ID</th>
               <th class="new-url-set">
                 New Domain URLs{% if number_of_new_urls == number_of_urls %}
@@ -123,9 +156,15 @@
                   <span class="badge bg-danger">{{ number_of_new_urls }}</span>
                 {% endif %}
               </th>
-              <th>HTTP Status of New Domain</th>
+              <th>
+                HTTP Status{% if number_of_new_domain_urls_with_status == number_of_new_urls %}
+                  <span class="badge bg-success">{{ number_of_new_domain_urls_with_status }}</span>
+                {% else %}
+                  <span class="badge bg-danger">{{ number_of_new_domain_urls_with_status }}</span>
+                {% endif %}
+              </th>
               <th>Last Indexed</th>
-              <th>Time to First Byte</th>
+              <th>TTFB</th>
               <th>URL ID</th>
             </tr>
           </thead>
@@ -166,41 +205,98 @@
       })
     </script>
     <script>
-      ajaxurl = '/migrator/cron?url_to_index=2'
-      function fetchUrl() {        
+      let ajaxurl = '/migrator/cron' // /migrator/cron?url_to_index=1&domain=http://exemple.com;
+      let restart_delay = 1000
+      let url_to_index = 1
+      let lastAjaxRequestResponseDelay = 0
+      let domain = ''
+      let urlScanedPerSeconde = 0
+      const scanSecondOld = document.querySelector('.scansecondold')
+      const scanSecondNew = document.querySelector('.scansecondnew')
+      
+      function fetchUrl() {
+        let startTime = Date.now() // enregistre le temps de début
+      
         fetch(ajaxurl)
           .then((response) => {
             if (!response.ok) {
-              // uncheck the switch
-              $('#boostQuerySwitch').prop('checked', false)
               throw new Error('Erreur réseau lors de la requête fetch')
             }
             return response.json()
           })
           .then((data) => {
-            // Utilisez vos données ici
             console.log(data)
-            if ($('#boostQuerySwitch')[0].checked) {
-              delayer()
-            }
           })
           .catch((error) => {
             console.error('Erreur lors de la récupération des données : ', error)
           })
+          .finally(() => {
+            ajaxurl = '/migrator/cron?url_to_index=' + url_to_index + '&domain=' + encodeURIComponent(domain)
+      
+            let endTime = Date.now() // enregistre le temps de fin
+            let thisRequestResponseDelay = endTime - startTime // calcule le temps de réponse
+      
+            if (lastAjaxRequestResponseDelay === 0 || thisRequestResponseDelay < lastAjaxRequestResponseDelay) {
+              url_to_index += 1
+              if (restart_delay > 1000) {
+                restart_delay -= 100
+              }
+            } else if (thisRequestResponseDelay > lastAjaxRequestResponseDelay) {
+              restart_delay += 100
+              if (url_to_index > 1) {
+                url_to_index -= 1
+              }
+            }
+            urlScanedPerSeconde = url_to_index / (thisRequestResponseDelay / 1000)
+            console.log('urlScanedPerSeconde', urlScanedPerSeconde)
+            scanSecondOld.innerHTML = urlScanedPerSeconde.toFixed(2) + '/sec'
+            scanSecondNew.innerHTML = urlScanedPerSeconde.toFixed(2) + '/sec'
+      
+            lastAjaxRequestResponseDelay = thisRequestResponseDelay // met à jour le temps de réponse de la dernière requête
+            if (!document.querySelector('#stopScan').checked) {
+              setTimeout(fetchUrl, restart_delay)
+            }
+          })
       }
       
-      $('#boostQuerySwitch').change(function () {
-        if ($(this).is(':checked')) {
-          delayer()
-        }
-      })
-      
-      function delayer() {
-        setTimeout(fetchUrl, 1000)
-      }
+      document.querySelectorAll('input[name="btnradio"]').forEach((radio) => {
+        radio.addEventListener('change', (e) => {
+          // Récupère les éléments span pour scanold et scannew
+          const scanOldSpinner = document.querySelector('.scanold')
+          const scanNewSpinner = document.querySelector('.scannew')
 
       
-      // setInterval(fetchUrl, 1000);
+          // Retire la classe 'spinner-border' des deux éléments span
+          scanOldSpinner.classList.remove('spinner-border')
+          scanNewSpinner.classList.remove('spinner-border')
+      
+          // Ajoute la classe 'visually-hidden' aux deux éléments span pour scansecondold et scansecondnew
+          scanSecondOld.classList.add('visually-hidden')
+          scanSecondNew.classList.add('visually-hidden')
+      
+          if (e.target.id === 'scanOld') {
+            domain = document.querySelector('#id_old_domain').value
+            // Ajoute la classe 'spinner-border' à l'élément span pour scanold
+            scanOldSpinner.classList.add('spinner-border')
+            // Retire la classe 'visually-hidden' de l'élément span pour scansecondold
+            scanSecondOld.classList.remove('visually-hidden')
+          } else if (e.target.id === 'scanNew') {
+            domain = document.querySelector('#id_new_domain').value
+            // Ajoute la classe 'spinner-border' à l'élément span pour scannew
+            scanNewSpinner.classList.add('spinner-border')
+            // Retire la classe 'visually-hidden' de l'élément span pour scansecondnew
+            scanSecondNew.classList.remove('visually-hidden')
+          }
+      
+          if (domain !== '') {
+            // Mettre à jour l'URL de la requête Ajax
+            ajaxurl = '/migrator/cron?url_to_index=' + url_to_index + '&domain=' + encodeURIComponent(domain)
+            // Démarrer la requête Ajax
+            fetchUrl()
+          }
+        })
+      })
+      
     </script>
 
     <!-- Dark Mode Switch -->

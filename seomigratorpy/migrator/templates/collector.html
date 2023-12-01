@@ -1,0 +1,20 @@
+{
+    "status": "ok",
+    "urls": [
+        {% for url in indexed_urls %}
+        {
+            "id": {{ url.id }},
+            "url": "{{ url.url }}",
+            "subdomain": "{{ url.url.subdomain }}",
+            "domain": "{{ url.domain }}",
+            "path": "{{ url.path }}",
+            "page_id": {{ url.Page_id|default:"null" }},
+            "http_status": {{ url.http_status|default:"null" }},
+            "protocol": "{{ url.protocol }}",
+            "first_seen": "{{ url.first_seen|date:"c"|default:"null" }}",
+            "last_indexed": "{{ url.last_indexed|date:"c"|default:"null" }}",
+            "time_to_first_bite": {{ url.time_to_first_bite|default:"null" }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}     
+    ]
+}

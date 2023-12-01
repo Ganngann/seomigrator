@@ -10,7 +10,6 @@ from pprint import pprint
 class SubdomainManager(models.Manager):
     def get_or_create_subdomain(self, url):
         extracted_subdomain = self.extract_subdomain(url)
-        # pprint(extracted_domain)
         if extracted_subdomain == '':
             return 
         else:   
@@ -22,7 +21,6 @@ class SubdomainManager(models.Manager):
     
     def extract_subdomain(self, url):
         ext = tldextract.extract(url)
-        # pprint(vars(ext))
         if ext.subdomain :
             return ext.subdomain
         else:

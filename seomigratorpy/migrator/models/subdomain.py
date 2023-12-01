@@ -1,3 +1,4 @@
+# seomigratorpy/migrator/models/subdomain.py
 from django.db import models
 
 class Subdomain(models.Model):

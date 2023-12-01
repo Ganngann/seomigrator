@@ -13,7 +13,6 @@ class DomainManager(models.Manager):
     # else create domain and return domain
     def get_or_create_domain(self, url):
         extracted_domain = self.extract_domain(url)
-        # pprint(extracted_domain)
         if extracted_domain == '':
             return 
         else:   
@@ -25,7 +24,6 @@ class DomainManager(models.Manager):
     
     def extract_domain(self, url):
         ext = tldextract.extract(url)
-        # pprint(vars(ext))
         if ext.domain and ext.suffix:
             return ext.domain + '.' + ext.suffix
         else:
