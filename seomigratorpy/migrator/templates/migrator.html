@@ -35,6 +35,8 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
+    {% load static %}
+    <script src="{% static 'js/migrator.js' %}"></script>
     <title>Seo Migrator</title>
     <meta name="description" content="Seo Migrator tool to test your SEO migration from one domain to another." />
 
@@ -70,13 +72,17 @@
 
         <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
           <input type="radio" class="btn-check" name="btnradio" id="scanOld" autocomplete="off" />
-          <label class="btn btn-outline-primary" for="scanOld"><span class="badge rounded-pill bg-pimary scansecondold visually-hidden">1.2/sec</span> Scan old domain <span class=" spinner-border-sm scanold" role="status" aria-hidden="true"></span></label>
+          <label class="btn btn-outline-primary" for="scanOld"><span class="badge rounded-pill bg-pimary scansecondold visually-hidden"></span> Scan old domain <span class=" spinner-border-sm scanold" role="status" aria-hidden="true"></span></label>
 
           <input type="radio" class="btn-check" name="btnradio" id="stopScan" autocomplete="off" checked />
           <label class="btn btn-outline-primary" for="stopScan">Stop Scan</label>
 
           <input type="radio" class="btn-check" name="btnradio" id="scanNew" autocomplete="off" />
-          <label class="btn btn-outline-primary" for="scanNew"><span class="badge rounded-pill bg-pimary scansecondnew visually-hidden">1.2/sec</span> Scan new domain <span class=" spinner-border-sm scannew" role="status" aria-hidden="true"></span></label>
+          <label class="btn btn-outline-primary" for="scanNew">
+            <span class="badge rounded-pill bg-pimary scansecondnew visually-hidden"></span>
+             Scan new domain 
+            <span class=" spinner-border-sm scannew" role="status" aria-hidden="true"></span>
+          </label>
         </div>
 
         <div class="form-check form-switch dark-mode-switch">
@@ -205,98 +211,7 @@
       })
     </script>
     <script>
-      let ajaxurl = '/migrator/cron' // /migrator/cron?url_to_index=1&domain=http://exemple.com;
-      let restart_delay = 1000
-      let url_to_index = 1
-      let lastAjaxRequestResponseDelay = 0
-      let domain = ''
-      let urlScanedPerSeconde = 0
-      const scanSecondOld = document.querySelector('.scansecondold')
-      const scanSecondNew = document.querySelector('.scansecondnew')
-      
-      function fetchUrl() {
-        let startTime = Date.now() // enregistre le temps de début
-      
-        fetch(ajaxurl)
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error('Erreur réseau lors de la requête fetch')
-            }
-            return response.json()
-          })
-          .then((data) => {
-            console.log(data)
-          })
-          .catch((error) => {
-            console.error('Erreur lors de la récupération des données : ', error)
-          })
-          .finally(() => {
-            ajaxurl = '/migrator/cron?url_to_index=' + url_to_index + '&domain=' + encodeURIComponent(domain)
-      
-            let endTime = Date.now() // enregistre le temps de fin
-            let thisRequestResponseDelay = endTime - startTime // calcule le temps de réponse
-      
-            if (lastAjaxRequestResponseDelay === 0 || thisRequestResponseDelay < lastAjaxRequestResponseDelay) {
-              url_to_index += 1
-              if (restart_delay > 1000) {
-                restart_delay -= 100
-              }
-            } else if (thisRequestResponseDelay > lastAjaxRequestResponseDelay) {
-              restart_delay += 100
-              if (url_to_index > 1) {
-                url_to_index -= 1
-              }
-            }
-            urlScanedPerSeconde = url_to_index / (thisRequestResponseDelay / 1000)
-            console.log('urlScanedPerSeconde', urlScanedPerSeconde)
-            scanSecondOld.innerHTML = urlScanedPerSeconde.toFixed(2) + '/sec'
-            scanSecondNew.innerHTML = urlScanedPerSeconde.toFixed(2) + '/sec'
-      
-            lastAjaxRequestResponseDelay = thisRequestResponseDelay // met à jour le temps de réponse de la dernière requête
-            if (!document.querySelector('#stopScan').checked) {
-              setTimeout(fetchUrl, restart_delay)
-            }
-          })
-      }
-      
-      document.querySelectorAll('input[name="btnradio"]').forEach((radio) => {
-        radio.addEventListener('change', (e) => {
-          // Récupère les éléments span pour scanold et scannew
-          const scanOldSpinner = document.querySelector('.scanold')
-          const scanNewSpinner = document.querySelector('.scannew')
 
-      
-          // Retire la classe 'spinner-border' des deux éléments span
-          scanOldSpinner.classList.remove('spinner-border')
-          scanNewSpinner.classList.remove('spinner-border')
-      
-          // Ajoute la classe 'visually-hidden' aux deux éléments span pour scansecondold et scansecondnew
-          scanSecondOld.classList.add('visually-hidden')
-          scanSecondNew.classList.add('visually-hidden')
-      
-          if (e.target.id === 'scanOld') {
-            domain = document.querySelector('#id_old_domain').value
-            // Ajoute la classe 'spinner-border' à l'élément span pour scanold
-            scanOldSpinner.classList.add('spinner-border')
-            // Retire la classe 'visually-hidden' de l'élément span pour scansecondold
-            scanSecondOld.classList.remove('visually-hidden')
-          } else if (e.target.id === 'scanNew') {
-            domain = document.querySelector('#id_new_domain').value
-            // Ajoute la classe 'spinner-border' à l'élément span pour scannew
-            scanNewSpinner.classList.add('spinner-border')
-            // Retire la classe 'visually-hidden' de l'élément span pour scansecondnew
-            scanSecondNew.classList.remove('visually-hidden')
-          }
-      
-          if (domain !== '') {
-            // Mettre à jour l'URL de la requête Ajax
-            ajaxurl = '/migrator/cron?url_to_index=' + url_to_index + '&domain=' + encodeURIComponent(domain)
-            // Démarrer la requête Ajax
-            fetchUrl()
-          }
-        })
-      })
-      
     </script>
 
     <!-- Dark Mode Switch -->

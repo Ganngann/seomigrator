@@ -93,7 +93,11 @@ DATABASES = {
         'PORT': os.getenv('SQL_PORT', '3306'),
     }
 }
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
+if DEBUG:
+    STATIC_URL = '/static/'
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 
 # Password validation
@@ -163,6 +167,3 @@ LOGGING = {
     },
 }
 
-if DEBUG:
-    STATIC_URL = '/static/'
-    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
