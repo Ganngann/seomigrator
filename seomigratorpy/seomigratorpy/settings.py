@@ -133,13 +133,12 @@ STATIC_URL = '/staticfiles/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'migrator/static'),
 ]
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'seomigratorpy/staticfiles')
 
 if DEBUG:
     print("DEBUG IS TRUE")
     STATIC_URL = '/static/'
-    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+    STATIC_ROOT = os.path.join(BASE_DIR, 'seomigratorpy/static')
 
 
 # Default primary key field type
