@@ -1,0 +1,10 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/wrpg9004/repositories/seomigrator/seomigratorpy
+    - source /home/wrpg9004/virtualenv/repositories/seomigrator/seomigratorpy/3.9/bin/activate
+    - cd $DEPLOYPATH
+    - git pull
+    - pip install -r $DEPLOYPATH/requirements.txt
+    - python $DEPLOYPATH/manage.py migrate
+    - python $DEPLOYPATH/manage.py collectstatic --noinput
