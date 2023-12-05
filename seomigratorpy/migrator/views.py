@@ -98,7 +98,7 @@ def migrator(request):
     )
 
 
-def index_url_in_queue_with_retry(queue_url, max_retries=100):
+def index_url_in_queue_with_retry(queue_url, max_retries=1):
     for _ in range(max_retries):
         try:
             with transaction.atomic():
@@ -112,7 +112,7 @@ def index_url_in_queue_with_retry(queue_url, max_retries=100):
         raise OperationalError("Trop de tentatives de réessai, abandon.")
 
 
-def index_url_with_retry(url, max_retries=100):
+def index_url_with_retry(url, max_retries=1):
     for _ in range(max_retries):
         try:
             with transaction.atomic():
