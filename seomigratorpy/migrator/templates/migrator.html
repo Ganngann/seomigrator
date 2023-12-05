@@ -143,6 +143,9 @@
           <thead>
             <tr>
               <th>
+                <input type="checkbox" id="old-url-select-all">
+              </th>
+              <th>
                 Original Domain URLs <span class="badge bg-success">{{ number_of_urls }}</span>
               </th>
               <th>
@@ -156,6 +159,9 @@
               <th>TTFB</th>
               <th class="old-url-set">URL ID</th>
               <th class="new-url-set">
+                <input type="checkbox" id="new-url-select-all">
+              </th>
+              <th>
                 New Domain URLs{% if number_of_new_urls == number_of_urls %}
                   <span class="badge bg-success">{{ number_of_new_urls }}</span>
                 {% else %}
@@ -177,12 +183,18 @@
           <tbody>
             {% for old_url, new_url in joined_sets.items %}
               <tr>
+                <td>
+                  <input type="checkbox" class="old-url-select" value="{{ old_url.id }}">
+                </td>
                 <td>{{ old_url.url }}</td>
                 <td>{{ old_url.http_status }}</td>
                 <td>{{ old_url.last_indexed }}</td>
                 <td>{{ old_url.time_to_first_bite }}</td>
                 <td class="old-url-set">{{ old_url.id }}</td>
-                <td class="new-url-set">{{ new_url.url }}</td>
+                <td class="new-url-set">
+                  <input type="checkbox" class="new-url-select" value="{{ new_url.id }}">
+                </td>
+                <td>{{ new_url.url }}</td>
                 <td>{{ new_url.http_status }}</td>
                 <td>{{ new_url.last_indexed }}</td>
                 <td>{{ new_url.time_to_first_bite }}</td>
@@ -192,6 +204,17 @@
           </tbody>
         </table>
       </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <select id="action-dropdown" name="action" class="form-control">
+            <option value="">--Select an action--</option>
+            <option value="delete">Delete</option>
+            <option value="update" data-bs-toggle="popover" data-bs-placement="right" title="Maximum 5 urls">Index immediatly</option>
+            <option value="add_to_queue">Add to index queue</option>
+          </select>
+          <button id="action-submit" type="button" class="btn btn-primary">Submit</button>
+        </div>
+      </div>      
     </div>
 
     <script>

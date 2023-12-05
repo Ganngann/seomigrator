@@ -1,11 +1,9 @@
 
 $(document).ready(function () {
 
-    console.log('4############################# Hello, World! #############################')
-
     let ajaxurl = '/migrator/cron' // /migrator/cron?url_to_index=1&domain=http://exemple.com;
     let restart_delay = 0
-    let url_to_index = 0
+    let url_to_index = 1
     let lastAjaxRequestResponseDelay = 0
     let domain = ''
     let urlScanedPerSeconde = 1
@@ -96,5 +94,80 @@ $(document).ready(function () {
             }
         })
     })
+
+    document.getElementById('action-submit').addEventListener('click', function () {
+        var selectedAction = document.getElementById('action-dropdown').value;
+        var checkboxes = document.querySelectorAll('input[type=checkbox]:checked');
+
+        // Faire quelque chose avec l'action sélectionnée et les cases à cocher cochées
+    });
+
+
+    $(document).ready(function(){
+        $('#action-submit').click(function(){
+            var selectedAction = $('#action-dropdown').val();
+            var selectedCheckboxes = $('.old-url-select:checked, .new-url-select:checked').map(function() {
+                return this.value;
+            }).get();
+            console.log(selectedAction);
+            console.log(selectedCheckboxes);
+    
+            // Récupération du token CSRF
+            var csrfToken = $('[name="csrfmiddlewaretoken"]').val();
+    
+            $.ajax({
+                url: '/migrator/ajax',
+                type: 'POST',
+                data: {
+                    action: selectedAction,
+                    url_ids: selectedCheckboxes,
+                    csrfmiddlewaretoken: csrfToken  // Ajout du token CSRF
+                },
+                success: function(response){
+                    // Gérer la réponse ici
+                    console.log(response);
+                    // Rafraîchir la page
+                    location.reload();
+                },
+                error: function(error){
+                    // Gérer l'erreur ici
+                    console.error(error);
+                    // Rafraîchir la page
+                    location.reload();
+                }
+            });
+        });
+    });
+    
+    $(document).ready(function() {
+        // Select/Deselect checkboxes for all items in the table
+        $('#old-url-select-all').on('click', function() {
+            if (this.checked == true) {
+                $('.old-url-select').each(function() {
+                    this.checked = true;
+                });
+            } else {
+                $('.old-url-select').each(function() {
+                    this.checked = false;
+                });
+            }
+        });
+    
+        $('#new-url-select-all').on('click', function() {
+            if (this.checked == true) {
+                $('.new-url-select').each(function() {
+                    this.checked = true;
+                });
+            } else {
+                $('.new-url-select').each(function() {
+                    this.checked = false;
+                });
+            }
+        });
+    });
+    
+
+
+
 })
 

@@ -138,7 +138,6 @@ STATICFILES_DIRS = [
 STATIC_ROOT = os.path.join(BASE_DIR, 'seomigratorpy/staticfiles')
 
 if DEBUG:
-    print("DEBUG IS TRUE")
     STATIC_URL = '/static/'
     STATIC_ROOT = os.path.join(BASE_DIR, 'seomigratorpy/static')
     

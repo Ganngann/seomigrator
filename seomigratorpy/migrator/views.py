@@ -8,6 +8,8 @@ from migrator.models import Domain, Url, Queue
 from migrator.models.managers.url_manager import UrlManager
 from itertools import zip_longest
 from multiprocessing import Pool
+from django.db import OperationalError, transaction
+from time import sleep
 
 
 def migrator(request):
@@ -28,6 +30,7 @@ def migrator(request):
         old_domain, created = UrlManager.get_or_create_url(
             form.cleaned_data["old_domain"]
         )
+
         new_domain, created = UrlManager.get_or_create_url(
             form.cleaned_data["new_domain"]
         )
@@ -40,6 +43,7 @@ def migrator(request):
         urls = list(
             Url.objects.filter(domain=old_domain.domain)
         )  # Convertir en liste pour éviter les requêtes multiples
+
         for url in urls:
             new_uri = copy.copy(url)
             new_uri.domain = new_domain.domain
@@ -94,20 +98,33 @@ def migrator(request):
     )
 
 
-def index_url_in_queue(queue_url):
-    print("############### Indexing: " + queue_url.url.url)
-    queue_url.delete()
-    try:
-        queue_url.url.index()
-    except Exception as e:
-        pass
-    return vars(queue_url)
+def index_url_in_queue_with_retry(queue_url, max_retries=100):
+    for _ in range(max_retries):
+        try:
+            with transaction.atomic():
+                queue_url.delete()
+                queue_url.url.index()
+        except OperationalError:
+            sleep(1)  # Attendre un peu avant de réessayer peut aider
+        else:
+            return vars(queue_url)  # Si aucune erreur n'est levée, sortir de la boucle
+    else:
+        raise OperationalError("Trop de tentatives de réessai, abandon.")
 
 
-def index_url(url):
-    url.queue.delete()
-    url.index()
-    return vars(url)
+def index_url_with_retry(url, max_retries=100):
+    for _ in range(max_retries):
+        try:
+            with transaction.atomic():
+                url.index()
+                if hasattr(url, 'queue'):
+                    url.queue.delete()
+        except OperationalError:
+            sleep(1)  # Attendre un peu avant de réessayer peut aider
+        else:
+            return vars(url)  # Si aucune erreur n'est levée, sortir de la boucle
+    else:
+        raise OperationalError("Trop de tentatives de réessai, abandon.")
 
 
 from django.db.models import Q
@@ -124,7 +141,6 @@ def collector(request):
         url_to_index = int(url_to_index)
     else:
         url_to_index = 5
-    print(url_to_index)
 
     # If domain parameter is defined, filter the queue by domain and subdomain
     if domain_to_index is not None:
@@ -134,16 +150,63 @@ def collector(request):
             subdomain=domain_to_index.subdomain,
         )[:url_to_index]
         
-        for url in urls_with_queue:
-            print(url.url)
-            index_url(url)
-        indexed_urls = urls_with_queue
+        # for url in urls_with_queue:
+        #     print(url.url)
+        #     index_url(url)
+        with Pool(processes=1) as pool:
+            indexed_urls = pool.map(index_url_with_retry, urls_with_queue)
+        
+        # indexed_urls = urls_with_queue
             
 
     else:
         queue_urls = Queue.objects.all()[:url_to_index]
         # Créer un pool de processus
         with Pool(processes=1) as pool:
-            indexed_urls = pool.map(index_url_in_queue, queue_urls)
+            indexed_urls = pool.map(index_url_in_queue_with_retry, queue_urls)
 
     return render(request, "collector.html", {"indexed_urls": indexed_urls})
+
+
+def index(request):
+    url_ids = request.POST.getlist("url_ids[]")
+    urls = Url.objects.filter(id__in=url_ids)[:5]
+    for url in urls:
+        # get url by id
+        index_url_with_retry(url)  
+    return urls
+
+def delete(request):
+    url_ids = request.POST.getlist("url_ids[]")
+    urls = Url.objects.filter(id__in=url_ids)
+    for url in urls:
+        url.delete()
+    return urls
+
+def add_to_queue(request):
+    url_ids = request.POST.getlist("url_ids[]")
+    urls = Url.objects.filter(id__in=url_ids)
+    for url in urls:
+        url.add_to_queue()
+    return urls
+
+def ajax(request):
+    print("######################## AJAX")
+    pprint.pprint(vars(request))
+    urls = []
+    action = request.POST.get("action")
+    print("############## ACTION:")
+    print(action)
+    ids = request.POST.getlist("url_ids[]")
+    print("############## IDS:")
+    print(ids)
+    if action == "delete":
+        urls = delete(request)
+    elif action == "update":
+        print("################### update")
+        urls = index(request)
+    elif action == "add_to_queue":
+        urls = add_to_queue(request)
+    return render(request, "collector.html", {"indexed_urls": urls})
+
+
